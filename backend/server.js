@@ -19,7 +19,6 @@ const equipamentosRoutes = require('./routes/equipamentosRoutes');
 const chamadosRoutes     = require('./routes/chamadosRoutes');
 const manutencaoRoutes   = require('./routes/manutencaoRoutes');
 const dashboardRoutes    = require('./routes/dashboardRoutes');
-const usuariosRoutes     = require('./routes/usuariosRoutes');
 
 const app = express();
 
@@ -31,10 +30,7 @@ app.use(express.json());
 // Cors para permitir o frontend rodar em outra porta (3000) e se comunicar com o backend (8080)
 const cors = require('cors');
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://3000-io13c631zt5w3fhw6rmnt-f8bcc29f.us1.manus.computer',
-  ],
+  origin: 'http://localhost:3000', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -46,7 +42,6 @@ app.use('/equipamentos', equipamentosRoutes);
 app.use('/chamados',     chamadosRoutes);
 app.use('/manutencao',   manutencaoRoutes);
 app.use('/dashboard',    dashboardRoutes);
-app.use('/usuarios',     usuariosRoutes);
 
 // ---- Rota de health check ----
 // Útil para verificar se o servidor está no ar 

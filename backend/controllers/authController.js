@@ -1,6 +1,14 @@
 // =============================================
 // CONTROLLER DE AUTENTICAÇÃO
 // =============================================
+// TODO (alunos): implementar as funções registro e login.
+//
+// Dicas:
+//   - Use bcryptjs para criptografar a senha antes de salvar (registro)
+//   - Use bcryptjs para comparar a senha no login (bcrypt.compare)
+//   - Use jsonwebtoken (jwt.sign) para gerar o token após login bem-sucedido
+//   - O payload do token deve ter: id, nome, email, nivel_acesso
+//   - NUNCA coloque a senha no payload do token!
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -9,76 +17,57 @@ const db = require('../config/database');
 // POST /auth/registro - cria um novo usuário
 const registro = async (req, res) => {
   const { nome, email, senha, nivel_acesso } = req.body;
-
-  if (!nome || !email || !senha) {
-    return res.status(400).json({ error: 'Nome, e-mail e senha são obrigatórios.' });
-  }
-
-  try {
+    
+    // 1. Gera o salt e o hash da senha
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(senha, salt);
 
-    await db.query(
-      'INSERT INTO usuarios (nome, email, senha, nivel_acesso) VALUES (?, ?, ?, ?)',
-      [nome, email, hashedPassword, nivel_acesso || 'cliente']
-    );
-
-    res.status(201).json({ message: 'Usuário criado com sucesso!' });
-  } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ error: 'E-mail já cadastrado.' });
+    try {
+        await db.query(
+            'INSERT INTO usuarios (nome, email, senha, nivel_acesso) VALUES (?, ?, ?, ?)',
+            [nome, email, hashedPassword, nivel_acesso]
+        );
+        res.status(201).json({ message: "Usuário criado com sucesso!" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-    res.status(500).json({ error: error.message });
-  }
 };
 
 // POST /auth/login - autentica e retorna JWT
 const login = async (req, res) => {
-  const { email, senha } = req.body;
-
-  if (!email || !senha) {
-    return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
-  }
-
+  // TODO
+  const { email, senha } = req.body
   try {
-    const [linhas] = await db.query(
-      'SELECT id, nome, email, senha, nivel_acesso FROM usuarios WHERE email = ?',
-      [email]
-    );
 
-    if (linhas.length === 0) {
-      return res.status(401).json({ error: 'E-mail ou senha incorretos.' });
-    }
+    const senhadb = await db.query(
+      'SELECT senha FROM usuarios where email = ?', [email]
+      
+    ) 
 
-    const usuario = linhas[0];
-
-    const senhaValida = await bcrypt.compare(senha, usuario.senha);
+    const senhaValida = await bcrypt.compare(senha, senhadb)
     if (!senhaValida) {
-      return res.status(401).json({ error: 'E-mail ou senha incorretos.' });
+      return res.status(401).json({ message: "E-mail ou senha incorretos" })
     }
-
-    const payload = {
-      id: usuario.id,
-      nome: usuario.nome,
-      email: usuario.email,
-      nivel_acesso: usuario.nivel_acesso,
+    
+    const payload = { 
+      id: usuario.id, 
+      nome: usuario.nome, 
+      nivel_acesso: usuario.nivel_acesso 
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '9h' });
-
-    return res.status(200).json({
-      token,
-      usuario: {
-        id: usuario.id,
-        nome: usuario.nome,
-        email: usuario.email,
-        nivel_acesso: usuario.nivel_acesso,
-      },
-    });
-  } catch (error) {
-    console.error('Erro no login:', error);
-    return res.status(500).json({ error: 'Erro interno no servidor.' });
+    const token = jwt.sign(
+        payload, 
+        process.env.JWT_SECRET,
+        { expiresIn: '9h' }     
+      );
+  } catch (erro){
+    console.error("Erro no login:", error)
+    return res.status(500).json({ error: "Erro interno no servidor" })
   }
-};
+
+  
+
+  
+}
 
 module.exports = { registro, login };
