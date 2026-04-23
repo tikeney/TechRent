@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { API_URL } from "@/lib/api";
 
 export default function ClienteDashboard() {
   const [equipamentos, setEquipamentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sucesso, setSucesso] = useState("");
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
@@ -26,7 +28,7 @@ export default function ClienteDashboard() {
       return;
     }
 
-    fetch("http://localhost:3001/equipamentos", {
+    fetch(`${API_URL}/equipamentos`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -43,9 +45,11 @@ export default function ClienteDashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("techrent_token");
+    setError("");
+    setSucesso("");
     
     try {
-      const res = await fetch("http://localhost:3001/chamados", {
+      const res = await fetch(`${API_URL}/chamados`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,9 +58,10 @@ export default function ClienteDashboard() {
         body: JSON.stringify(form)
       });
 
-      if (!res.ok) throw new Error("Erro ao abrir chamado");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.mensagem || "Erro ao abrir chamado");
       
-      alert("Chamado aberto com sucesso!");
+      setSucesso("Chamado aberto com sucesso! Nossa equipe técnica entrará em contato em breve.");
       setForm({ titulo: "", descricao: "", equipamento_id: "", prioridade: "media" });
     } catch (err) {
       setError(err.message);
@@ -76,6 +81,12 @@ export default function ClienteDashboard() {
         <h1 className="text-3xl font-bold">Abrir Chamado de TI</h1>
         <Button variant="outline" onClick={handleLogout}>Sair</Button>
       </div>
+
+      {sucesso && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+          {sucesso}
+        </div>
+      )}
 
       <Card>
         <CardHeader>

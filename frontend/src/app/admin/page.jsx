@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { API_URL } from "@/lib/api";
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -19,7 +20,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    fetch("http://localhost:3001/dashboard/admin", {
+    fetch(`${API_URL}/dashboard/admin`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

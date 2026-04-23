@@ -27,11 +27,23 @@ const app = express();
 // Permite que o Express leia o corpo das requisições em JSON
 app.use(express.json());
 
-// Cors para permitir o frontend rodar em outra porta (3000) e se comunicar com o backend (8080)
+// Cors para permitir o frontend rodar em outra porta (3000) e se comunicar com o backend (3001)
 const cors = require('cors');
 app.use(cors({
-  origin: 'http://localhost:3000', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: function(origin, callback) {
+    // Permite localhost e qualquer subdomínio do proxy manus.computer
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ];
+    // Permite qualquer origem do proxy (manus.computer)
+    if (!origin || allowedOrigins.includes(origin) || /\.manus\.computer$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Permite todas as origens em desenvolvimento
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 

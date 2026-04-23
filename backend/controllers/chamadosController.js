@@ -51,7 +51,7 @@ const buscarPorId = async (req, res) => {
   try {
     // Seleciona o chamado de acordo com o Id procurado
     const [linhas] = await db.query(
-      'SELECT c.id, c.titulo, c.descricao, c.status, c.prioridade, c.aberto_em, c.atualizado_em, c.cliente_id, u.nome  AS cliente_nome, e.nome  AS equipamento_nome, t.nome  AS tecnico_nome FROM chamados c JOIN usuarios     u ON u.id = c.cliente_id JOIN equipamentos e ON e.id = c.equipamento_id LEFT JOIN usuarios t ON t.id = c.tecnico_id WHERE c.id = ?',
+      'SELECT c.id, c.titulo, c.descricao, c.status, c.prioridade, c.aberto_em, c.atualizado_em, c.cliente_id, c.equipamento_id, u.nome AS cliente_nome, e.nome AS equipamento_nome, t.nome AS tecnico_nome FROM chamados c JOIN usuarios u ON u.id = c.cliente_id JOIN equipamentos e ON e.id = c.equipamento_id LEFT JOIN usuarios t ON t.id = c.tecnico_id WHERE c.id = ?',
       [chamado_id]
     );
 

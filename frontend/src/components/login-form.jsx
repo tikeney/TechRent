@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/api";
 
 export function LoginForm({ className, ...props }) {
   const [email, setEmail] = useState("");
@@ -32,7 +33,7 @@ export function LoginForm({ className, ...props }) {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3001/auth/login", {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

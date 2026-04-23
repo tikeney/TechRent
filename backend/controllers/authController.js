@@ -81,4 +81,17 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { registro, login };
+// GET /auth/usuarios - lista todos os usuários (apenas admin)
+const listarUsuarios = async (req, res) => {
+  try {
+    const [usuarios] = await db.query(
+      'SELECT id, nome, email, nivel_acesso, criado_em FROM usuarios ORDER BY criado_em DESC'
+    );
+    return res.status(200).json(usuarios);
+  } catch (error) {
+    console.error('Erro ao listar usuários:', error);
+    return res.status(500).json({ error: 'Erro interno no servidor' });
+  }
+};
+
+module.exports = { registro, login, listarUsuarios };
