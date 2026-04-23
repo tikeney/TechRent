@@ -151,4 +151,15 @@ const remover = async (req, res) => {
   }
 };
 
-module.exports = { listar, buscarPorId, criar, atualizar, remover };
+// GET /equipamentos/disponiveis - lista equipamentos com status 'operacional' via VIEW
+const listarDisponiveis = async (req, res) => {
+  try {
+    const [linhas] = await db.query('SELECT * FROM view_equipamentos_operacionais ORDER BY nome ASC');
+    return res.status(200).json(linhas);
+  } catch (error) {
+    console.error('[equipamentos.listarDisponiveis]', error);
+    return res.status(500).json({ mensagem: 'Erro no servidor.' });
+  }
+};
+
+module.exports = { listar, buscarPorId, criar, atualizar, remover, listarDisponiveis };

@@ -9,6 +9,9 @@ const router = express.Router();
 const { autenticar, autorizar } = require('../middlewares/auth');
 const ctrl = require('../controllers/equipamentosController');
 
+// Qualquer usuário autenticado pode listar equipamentos disponíveis (para abrir chamados)
+router.get('/disponiveis', autenticar, ctrl.listarDisponiveis);
+
 // Qualquer usuário autenticado pode listar equipamentos
 router.get('/', autenticar, ctrl.listar);
 
