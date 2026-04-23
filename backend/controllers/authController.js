@@ -1,14 +1,6 @@
 // =============================================
 // CONTROLLER DE AUTENTICAÇÃO
 // =============================================
-// TODO (alunos): implementar as funções registro e login.
-//
-// Dicas:
-//   - Use bcryptjs para criptografar a senha antes de salvar (registro)
-//   - Use bcryptjs para comparar a senha no login (bcrypt.compare)
-//   - Use jsonwebtoken (jwt.sign) para gerar o token após login bem-sucedido
-//   - O payload do token deve ter: id, nome, email, nivel_acesso
-//   - NUNCA coloque a senha no payload do token!
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -18,56 +10,75 @@ const db = require('../config/database');
 const registro = async (req, res) => {
   const { nome, email, senha, nivel_acesso } = req.body;
     
-    // 1. Gera o salt e o hash da senha
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(senha, salt);
-
     try {
+        // 1. Gera o salt e o hash da senha
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(senha, salt);
+
         await db.query(
             'INSERT INTO usuarios (nome, email, senha, nivel_acesso) VALUES (?, ?, ?, ?)',
-            [nome, email, hashedPassword, nivel_acesso]
+            [nome, email, hashedPassword, nivel_acesso || 'cliente']
         );
         res.status(201).json({ message: "Usuário criado com sucesso!" });
     } catch (error) {
+        console.error("Erro no registro:", error);
         res.status(500).json({ error: error.message });
     }
 };
 
 // POST /auth/login - autentica e retorna JWT
 const login = async (req, res) => {
-  // TODO
-  const { email, senha } = req.body
+  const { email, senha } = req.body;
   try {
+    // 1. Busca o usuário pelo e-mail
+    const [usuarios] = await db.query(
+      'SELECT id, nome, email, senha, nivel_acesso FROM usuarios WHERE email = ?', 
+      [email]
+    );
 
-    const senhadb = await db.query(
-      'SELECT senha FROM usuarios where email = ?', [email]
-      
-    ) 
+    if (usuarios.length === 0) {
+      return res.status(401).json({ message: "E-mail ou senha incorretos" });
+    }
 
-    const senhaValida = await bcrypt.compare(senha, senhadb)
+    const usuario = usuarios[0];
+
+    // 2. Compara a senha informada com o hash do banco
+    const senhaValida = await bcrypt.compare(senha, usuario.senha);
     if (!senhaValida) {
-      return res.status(401).json({ message: "E-mail ou senha incorretos" })
+      return res.status(401).json({ message: "E-mail ou senha incorretos" });
     }
     
+    // 3. Gera o payload do token
     const payload = { 
       id: usuario.id, 
       nome: usuario.nome, 
+      email: usuario.email,
       nivel_acesso: usuario.nivel_acesso 
     };
 
+    // 4. Assina o token JWT
     const token = jwt.sign(
         payload, 
         process.env.JWT_SECRET,
         { expiresIn: '9h' }     
-      );
-  } catch (erro){
-    console.error("Erro no login:", error)
-    return res.status(500).json({ error: "Erro interno no servidor" })
+    );
+
+    // 5. Retorna o token e os dados básicos do usuário
+    return res.json({
+        message: "Login realizado com sucesso",
+        token,
+        usuario: {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email,
+            nivel_acesso: usuario.nivel_acesso
+        }
+    });
+
+  } catch (error){
+    console.error("Erro no login:", error);
+    return res.status(500).json({ error: "Erro interno no servidor" });
   }
-
-  
-
-  
-}
+};
 
 module.exports = { registro, login };
